@@ -6,7 +6,7 @@ library(tidyverse)
 filtered_data <- read.csv("V3 Merged Files Through 4-3 CLEANED.csv", encoding = "UTF-8") %>% select(Date, PitcherId, PitcherThrows, BatterId, BatterSide, KorBB, PlayResult, PitchCall, AutoHitType, HitType, OutsOnPlay, RunsScored, ExitSpeed, Angle, Direction, Distance, Barrel, Strikes)
 
 filtered_data <- filtered_data %>%
-  filter((PitchCall == "InPlay" | PlayResult=="Undefined" & (!is.na(ExitSpeed) | !is.na(Angle))) )
+  filter((PitchCall == "InPlay" | PlayResult=="Undefined") & (!is.na(ExitSpeed) | !is.na(Angle)))
 ```
 
 ```{r}
