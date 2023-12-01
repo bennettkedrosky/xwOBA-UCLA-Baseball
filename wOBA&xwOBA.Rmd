@@ -109,8 +109,3 @@ for (i in 1:(nrow(filtered_data))) {
   #Note: No value in the xwOBA matrix should be greater than 2.1 (the HR constant) or less than 0
 }
 ```
-    
-  count_matrix[ev_index, la_index] = count_matrix[ev_index, la_index] + 1
-
-}
-```
