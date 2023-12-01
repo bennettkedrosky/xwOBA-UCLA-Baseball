@@ -7,6 +7,12 @@ library(tidyverse)
 #new_data = read.csv("V3 Merged Files Through 4-3 CLEANED.csv", nrows = 100000) %>% select(Date, PitcherId, PitcherThrows, BatterId, BatterSide, KorBB, PlayResult, PitchCall, AutoHitType, HitType, OutsOnPlay, RunsScored, ExitSpeed, Angle, Direction, Distance, Barrel, Strikes)
 
 filtered_data = read.csv("2022_tm_all.csv") %>% select(Batter, BatterId, TaggedHitType, PlayResult, RunsScored, ExitSpeed, Angle, PitchCall, KorBB, Strikes)
+
+filtered_data$ExitSpeed <- as.numeric(as.character(filtered_data$ExitSpeed))
+filtered_data <- filtered_data[!is.na(filtered_data$ExitSpeed), ]
+
+filtered_data$Angle <- as.numeric(as.character(filtered_data$Angle))
+filtered_data <- filtered_data[!is.na(filtered_data$Angle), ]
 ```
 
 ```{r}
@@ -33,14 +39,6 @@ xwOBA_matrix <- matrix(0, nrow = length(ev_groups) - 1, ncol = length(la_groups)
 colnames(xwOBA_matrix) <- paste("LA", head(la_groups, -1), "to", tail(la_groups, -1), sep = "_")
 rownames(xwOBA_matrix) <- paste("EV", head(ev_groups, -1), "to", tail(ev_groups, -1), sep = "_")
 count_matrix <- matrix(0, nrow = length(ev_groups) - 1, ncol = length(la_groups) - 1)
-```
-
-```{r}
-filtered_data$ExitSpeed <- as.numeric(as.character(filtered_data$ExitSpeed))
-filtered_data <- filtered_data[!is.na(filtered_data$ExitSpeed), ]
-
-filtered_data$Angle <- as.numeric(as.character(filtered_data$Angle))
-filtered_data <- filtered_data[!is.na(filtered_data$Angle), ]
 ```
 
 ```{r}
