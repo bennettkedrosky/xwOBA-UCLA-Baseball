@@ -8,11 +8,10 @@ library(tidyverse)
 
 filtered_data = read.csv("2022_tm_all.csv") %>% select(Batter, BatterId, TaggedHitType, PlayResult, RunsScored, ExitSpeed, Angle, PitchCall, KorBB, Strikes)
 
-filtered_data$ExitSpeed <- as.numeric(as.character(filtered_data$ExitSpeed))
-filtered_data <- filtered_data[!is.na(filtered_data$ExitSpeed), ]
-
-filtered_data$Angle <- as.numeric(as.character(filtered_data$Angle))
-filtered_data <- filtered_data[!is.na(filtered_data$Angle), ]
+#Filter out data in which no exit velo or launch angle recordded for ball in play 
+#Note. For the 2022 data, UCLA hit .232 in the ABs that no ev or la was recorded
+filtered_data <- filtered_data %>%
+  filter((PitchCall == "InPlay" & (!is.na(ExitSpeed) | !is.na(Angle))) | PlayResult=="Undefined")
 ```
 
 ```{r}
