@@ -4,95 +4,43 @@ library(ggplot2)
 library(dplyr)
 library(tidyverse)
 
-data_all = read.csv("2022_tm_all.csv", nrows = 100000) %>% select(Batter, BatterId, Strikes, PitchCall, KorBB, TaggedHitType, PlayResult, RunsScored)
-data_hits = read.csv("2022_tm_all.csv") %>% select(Batter, BatterId, TaggedHitType, PlayResult, RunsScored)
+#new_data = read.csv("V3 Merged Files Through 4-3 CLEANED.csv", nrows = 100000) %>% select(Date, PitcherId, PitcherThrows, BatterId, BatterSide, KorBB, PlayResult, PitchCall, AutoHitType, HitType, OutsOnPlay, RunsScored, ExitSpeed, Angle, Direction, Distance, Barrel, Strikes)
+
+filtered_data = read.csv("2022_tm_all.csv") %>% select(Batter, BatterId, TaggedHitType, PlayResult, RunsScored, ExitSpeed, Angle, PitchCall, KorBB, Strikes)
 ```
 
-```{r setup, include=FALSE}
-# Making the constants
+```{r}
+#from FanGraphs
 constants <- data.frame(
   constant = c("1B", "2B", "3B", "HR", "HBP", "UBB"),
   values = c(0, 0, 0, 0, 0, 0) 
   )
 
-singles <- data_all %>% filter(PlayResult == "Single")
-doubles <- data_all %>% filter(PlayResult == "Double")
-triples <- data_all %>% filter(PlayResult == "Triple")
-homeruns <- data_all %>% filter(PlayResult == "HomeRun")
-HitByPitch <- data_all %>% filter(PitchCall == "HitByPitch")
-walked <- data_all %>% filter(KorBB == "Walk" & Strikes > 0)
+constants[1, "values"] <- .89
+constants[2, "values"] <- 1.27
+constants[3, "values"] <- 1.62
+constants[4, "values"] <- 2.1
+constants[5, "values"] <- .72
+constants[6, "values"] <- .69
 
-constants[1, "values"] <- (sum(as.numeric(singles$RunsScored)) / nrow(singles))
-constants[2, "values"] <- (sum(as.numeric(doubles$RunsScored)) / nrow(doubles))
-constants[3, "values"] <- (sum(as.numeric(triples$RunsScored)) / nrow(triples))
-constants[4, "values"] <- (sum(as.numeric(homeruns$RunsScored)) / nrow(homeruns))
-constants[5, "values"] <- (sum(as.numeric(HitByPitch$RunsScored)) / nrow(HitByPitch))
-constants[6, "values"] <- (sum(as.numeric(walked$RunsScored)) / nrow(walked))
-
-constants
+constants[,"values", drop=FALSE]
 ```
 
-```{r setup, include=FALSE}
-# problem with players: more batter names than batter IDs (which should never happen)
-length(unique(data_hits$Batter))
-length(unique(data_hits$BatterId))
+```{r}
+ev_groups <- seq(0, 120, by = 5)  
+la_groups <- seq(90, -90, by = -2) 
+xwOBA_matrix <- matrix(0, nrow = length(ev_groups) - 1, ncol = length(la_groups) - 1)
+count_matrix <- matrix(0, nrow = length(ev_groups) - 1, ncol = length(la_groups) - 1)
 ```
 
-```{r setup, include=FALSE, message = FALSE, warning = FALSE}
-# Individual Stats data frame
-playerID = unique(data_hits$BatterId)
-woba_variables <- data.frame(
-  player_id = playerID,
-  UBB = 0,
-  HBP = 0,
-  B1 = 0,
-  B2 = 0,
-  B3 = 0,
-  HR = 0,
-  AB = 0,
-  BB = 0,
-  IBB = 0,
-  SF = 0
-)
+```{r}
+filtered_data$ExitSpeed <- as.numeric(as.character(filtered_data$ExitSpeed))
+filtered_data <- filtered_data[!is.na(filtered_data$ExitSpeed), ]
+
+filtered_data$Angle <- as.numeric(as.character(filtered_data$Angle))
+filtered_data <- filtered_data[!is.na(filtered_data$Angle), ]
 ```
 
-```{r setup, include=FALSE}
-# adding values to data frame
-for (i in 1:nrow(playerID)){
-  player <= playerID[i]
-  new_data_all <- data_all %>% filter(BatterId = player)
-  new_data_hits <- data_hits %>% filter(BatterId = player)
-  
-  singles <- new_data_all %>% filter(PlayResult == "Single")
-  doubles <- new_data_all %>% filter(PlayResult == "Double")
-  triples <- new_data_all %>% filter(PlayResult == "Triple")
-  homeruns <- new_data_all %>% filter(PlayResult == "HomeRun")
-  
-  HitByPitch <- new_data_all %>% filter(PitchCall == "HitByPitch")
-  intentional_walk <- new_data_all %>% filter(KorBB == "Walk" & Strikes == 0)
-  unintentional_walk <- new_data_all %>% filter(KorBB == "Walk" & Strikes > 0)
-  
-  sacrifice_fly <- new_data_all %>% filter(PlayResult == "Out" & RunsScored > 0)
-  
-  woba_variables[i, "UBB"] <- nrow(unintentional_walk)
-  woba_variables[i, "IBB"] <- nrow(intentional_walk)
-  woba_variables[i, "BB"] <- nrow(unintentional_walk) + nrow(intentional_walk)
-  woba_variables[i, "HBP"] <- nrow(HitByPitch)
-  woba_variables[i, "B1"] <- nrow(singles)
-  woba_variables[i, "B2"] <- nrow(doubles)
-  woba_variables[i, "B3"] <- nrow(triples)
-  woba_variables[i, "HR"] <- nrow(homeruns)
-  woba_variables[i, "AB"] <- nrow(new_data_hits)
-  woba_variables[i, "SF"] <- nrow(sacrifice_fly)
-    
-}
-```
-
-```{r setup, include=FALSE}
-# calculate woba
-mutate(woba_variables, 
-       woba = (B1*constants[1, "values"] + B2*constants[2, "values"] + B3*constants[3, "values"] + HR*constants[4, "values"] + HBP*constants[5, "values"] + UBB*constants[6, "values"]) / (AB+BB-IBB+SF+HBP)
-       )
-
-head(woba_variables)
+```{r}
+#for loop
 ```
