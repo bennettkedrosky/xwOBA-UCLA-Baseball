@@ -3,10 +3,15 @@ library(ggplot2)
 library(dplyr)
 library(tidyverse)
 
-data <- read.csv("V3 Merged Files Through 4-3 CLEANED.csv") %>% select(Date, PitcherId, PitcherThrows, BatterId, BatterSide, KorBB, PlayResult, PitchCall, AutoHitType, HitType, OutsOnPlay, RunsScored, ExitSpeed, Angle, Direction, Distance, Barrel, Strikes)
+data <- read.csv("V3 Merged Files Through 4-3 CLEANED.csv") %>% select(Date, Pitcher, PitcherId, PitcherThrows, PitcherTeam, Batter, BatterId, BatterSide, BatterTeam, KorBB, PlayResult, PitchCall, AutoHitType, HitType, OutsOnPlay, RunsScored, ExitSpeed, Angle, Direction, Distance, Barrel, Strikes)
 
 filtered_data <- data %>%
   filter((PitchCall == "InPlay" & (!is.na(ExitSpeed) | !is.na(Angle))) | PlayResult=="Undefined")
+
+#data missing EV and LA valuves
+#omitted_data <- data %>%
+  #filter(PitchCall == "InPlay" & (is.na(ExitSpeed) | is.na(Angle)))
+#NOTE-> Batters are hitting .232 in 59 PAs in which the ball was put in play with no EV or LA data
 ```
 
 ```{r}
@@ -24,6 +29,7 @@ constants[5, "values"] <- .72
 constants[6, "values"] <- .69
 
 constants[,"values", drop=FALSE]
+
 ```
 
 ```{r}
