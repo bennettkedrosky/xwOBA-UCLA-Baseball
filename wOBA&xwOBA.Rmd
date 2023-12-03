@@ -30,6 +30,7 @@ constants[6, "values"] <- .69
 
 constants[,"values", drop=FALSE]
 
+#Note-> need data about runners on base (for run expentancy matrix) to calculate wOBA weights. Don't have that data in our dataframe
 ```
 
 ```{r}
@@ -97,7 +98,7 @@ for (i in 1:(nrow(filtered_data))) {
     next
   }
   
-    
+
     wOBA <- (count_1B * constants[1, "values"]) + (count_2B * constants[2, "values"]) + 
             (count_3B * constants[3, "values"]) + (count_HR * constants[4, "values"]) + (count_BB * constants[6, "values"])
     #should also incorporate HBP
