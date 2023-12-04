@@ -116,3 +116,151 @@ for (i in 1:(nrow(filtered_data))) {
   #Note: No value in the xwOBA matrix should be greater than 2.1 (the HR constant) or less than 0
 }
 ```
+
+```{r}
+ucla_batter_ids <- unique(filtered_data %>%
+                                    filter(BatterTeam == "UCLA") %>%
+                                    select(Batter, BatterId))
+
+ucla_batter_ids <- ucla_batter_ids %>%
+  mutate(wOBA = 0, xwOBA = 0, xwOBAcon = 0, xwOBA_difference = 0)
+```
+
+```{r}
+for(batter_id in unique(ucla_batter_ids$BatterId))
+{
+  #xwOBAcon
+  batter_id_data <- filtered_data %>%
+    filter(BatterId == batter_id, PlayResult != "Undefined" | KorBB != "Undefined" | PitchCall == "HitByPitch")
+  
+  batter_1B <- 0
+  batter_2B <- 0
+  batter_3B <- 0
+  batter_HR <- 0
+  batter_HBP <- 0
+  batter_BB <- 0
+  batter_SAC_FLY <- 0
+  batter_OUT <- 0
+  batter_Ks <- 0
+  batter_AB <- 0
+  
+  for (i in 1:(nrow(batter_id_data))) {
+    row_data <- batter_id_data[i, ]
+  
+    if(row_data$KorBB == "Walk" && row_data$PitchCall != "BallIntentional") { #unintentional BBs
+      batter_BB <- batter_BB + 1
+    } 
+    
+    else if(row_data$KorBB == "Strikeout") {
+      batter_Ks <- batter_Ks + 1
+    } 
+    
+    else if(row_data$PitchCall == "HitByPitch") {
+      batter_HBP <- batter_HBP + 1
+    } 
+    
+    else if (row_data$PlayResult == "Single") {
+        batter_1B <- batter_1B  + 1
+      } 
+      
+    else if (row_data$PlayResult == "Double") {
+      batter_2B <- batter_2B + 1
+    } 
+      
+    else if (row_data$PlayResult == "Triple") {
+      batter_3B <- batter_3B + 1
+    } 
+      
+    else if (row_data$PlayResult == "HomeRun") {
+      batter_HR <- batter_HR + 1
+    } 
+      
+    else if (row_data$PlayResult == "Sacrifice"){
+      if (row_data$HitType == "Bunt") {
+        next
+      }
+      
+      else { #sacrifice fly
+        batter_SAC_FLY <- batter_SAC_FLY + 1
+      }
+    }
+      
+    else { #Outs ... note that undefined plays filtered out of batted_id_data
+      batter_OUT <- batter_OUT + 1
+    }
+  } #end of for loop  
+  
+  batter_AB <- batter_OUT + batter_Ks + batter_1B + batter_2B + batter_3B + batter_HR
+  
+  #Used for adding to ucla_batter_ids matrix
+  row_index <- which(ucla_batter_ids$BatterId == batter_id)
+  
+  #Calculate wOBA
+  wOBA_numer <- (batter_1B * constants[1, "values"]) + (batter_2B * constants[2, "values"]) + 
+          (batter_3B * constants[3, "values"]) + (batter_HR * constants[4, "values"]) + 
+          (batter_HBP * constants[5, "values"]) + (batter_BB * constants[6, "values"])
+  
+  wOBA_denom <- (batter_AB + batter_BB + batter_SAC_FLY + batter_HBP)
+  
+  wOBA <- wOBA_numer/wOBA_denom
+  
+  ucla_batter_ids[row_index, "wOBA"] <- wOBA
+  
+  
+  #Calculate xWOBAcon
+  #xWOBA for 1B, 2B, 3B, HR+OUT/ABs+SF
+  
+  xwOBAcon_numer <- 0
+  
+  bip_batter_id_data <- batter_id_data %>% #ball in play
+    filter(PlayResult != "Undefined")
+  
+  for (i in 1:(nrow(bip_batter_id_data))) {
+    row_data <- bip_batter_id_data[i, ]
+    
+    if (nrow(bip_batter_id_data) == 0) {
+      next
+    }
+    
+    ev_value <- row_data$ExitSpeed #exit velo
+    la_value <- row_data$Angle #Launch angle
+    
+    #if changing the original xwOBA matrix THIS MUST BE CHANGED
+    rounded_ev_value <- floor(ev_value / 5) * 5
+    rounded_la_value <- floor(la_value / 2) * 2
+    
+    #col and row label names
+    ev_label <- paste("EV", rounded_ev_value, "to", rounded_ev_value + 5, sep = "_")
+    la_label <- paste("LA", rounded_la_value, "to", rounded_la_value + 2, sep = "_")
+    
+    xwOBA_value <- xwOBA_matrix[ev_label, la_label]
+    
+    xwOBAcon_numer <- xwOBA_value + xwOBAcon_numer
+  }
+  
+  xwOBAcon_denom <- (batter_AB - batter_Ks + batter_SAC_FLY)
+  
+  if (xwOBAcon_denom == 0){
+    ucla_batter_ids[row_index, "xwOBAcon"] <- 0
+  } else {
+    xwOBAcon <- xwOBAcon_numer/xwOBAcon_denom
+  
+    ucla_batter_ids[row_index, "xwOBAcon"] <- xwOBAcon
+  }
+  
+  
+  #calculate xwOBA
+  xwOBA_numer <- xwOBAcon_numer + (batter_HBP * constants[5, "values"]) + (batter_BB * constants[6, "values"])
+    #If we have stolen base data +.2 for each steal and -.419 for each CS (USING 2021 FAN GRAPHS CONSTANTS)
+  
+  xwOBA <- xwOBA_numer/wOBA_denom #wOBA and xwOBA denom are the same
+  
+  ucla_batter_ids[row_index, "xwOBA"] <- xwOBA
+  
+  #calculate xwOBA_difference
+  xwOBA_difference <- xwOBA - wOBA
+  
+  ucla_batter_ids[row_index, "xwOBA_difference"] <- xwOBA_difference
+  
+}
+```
